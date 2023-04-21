@@ -113,19 +113,6 @@ def shortest_path(source, target):
         # Choose a node from the frontier
         node = frontier.remove()
 
-        # If node is the goal, then we have a solution
-        if node.state == target:
-            actions = []
-            states = []
-            while node.parent is not None:
-                actions.append(node.action)
-                states.append(node.state)
-                node = node.parent
-            actions.reverse()
-            states.reverse()
-            solution = list(zip(actions, states))
-            return solution
-
         # Mark node as explored
         explored.add(node.state)
 
@@ -134,7 +121,20 @@ def shortest_path(source, target):
             for state in movies[action]["stars"]:
                 if not frontier.contains_state(state) and state not in explored:
                     child = Node(state=state, parent=node, action=action)
-                    frontier.add(child)
+                    if child.state == target:
+                        node = child
+                        actions = []
+                        states = []
+                        while node.parent is not None:
+                            actions.append(node.action)
+                            states.append(node.state)
+                            node = node.parent
+                        actions.reverse()
+                        states.reverse()
+                        solution = list(zip(actions, states))
+                        return solution
+                    else:
+                        frontier.add(child)
 
 
 def person_id_for_name(name):
