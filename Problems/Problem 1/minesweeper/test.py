@@ -2,12 +2,10 @@ from minesweeper import *
 
 random.seed(33)
 
-swoop = Minesweeper()
+game = Minesweeper()
 
-swoop.print()
+game.print()
 
-sont = Sentence({(0,4), (0,5), (0,6)}, 3)
+ai = MinesweeperAI()
 
-print(
-    sont.known_mines()
-)
+ai.add_knowledge((0,6), 1)

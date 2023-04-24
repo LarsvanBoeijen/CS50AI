@@ -1,5 +1,6 @@
 import itertools
 import random
+import copy
 
 
 class Minesweeper():
@@ -120,15 +121,17 @@ class Sentence():
         Updates internal knowledge representation given the fact that
         a cell is known to be a mine.
         """
-        self.cells.remove(cell)
-        self.count -= 1
+        if cell in self.cells:
+            self.cells.remove(cell)
+            self.count -= 1
 
     def mark_safe(self, cell):
         """
         Updates internal knowledge representation given the fact that
         a cell is known to be safe.
         """
-        self.cells.remove(cell)
+        if cell in self.cells:
+            self.cells.remove(cell)
 
 
 class MinesweeperAI():
@@ -157,6 +160,7 @@ class MinesweeperAI():
         Marks a cell as a mine, and updates all knowledge
         to mark that cell as a mine as well.
         """
+        # print(f"Marking {cell} as a mine.")
         self.mines.add(cell)
         for sentence in self.knowledge:
             sentence.mark_mine(cell)
@@ -166,10 +170,11 @@ class MinesweeperAI():
         Marks a cell as safe, and updates all knowledge
         to mark that cell as safe as well.
         """
+        # print(f"Marking {cell} as safe.")
         self.safes.add(cell)
         for sentence in self.knowledge:
             sentence.mark_safe(cell)
-
+            
     def add_knowledge(self, cell, count):
         """
         Called when the Minesweeper board tells us, for a given
@@ -179,13 +184,73 @@ class MinesweeperAI():
             1) mark the cell as a move that has been made
             2) mark the cell as safe
             3) add a new sentence to the AI's knowledge base
-               based on the value of `cell` and `count`
+              based on the value of `cell` and `count`
             4) mark any additional cells as safe or as mines
-               if it can be concluded based on the AI's knowledge base
+              if it can be concluded based on the AI's knowledge base
             5) add any new sentences to the AI's knowledge base
-               if they can be inferred from existing knowledge
+              if they can be inferred from existing knowledge
         """
-        raise NotImplementedError
+        # Mark the cell as a move that has been made
+        self.moves_made.add(cell)
+
+        # Mark the cell as safe
+        self.mark_safe(cell)
+        
+        # Determine neigbouring cells on the basis of cell
+        neighbours = self.get_neighbours(cell)
+        
+        # Remove cells whose state has been determined
+        for neighbour in neighbours.copy():
+            if neighbour in self.mines:
+                neighbours.remove(neighbour)
+                # Subtract 1 from count if removed cell is a mine
+                count -= 1
+            elif neighbour in self.safes:
+                neighbours.remove(neighbour)
+        
+        # Add new sentence
+        self.knowledge.append(Sentence(neighbours, count))
+        
+        # While new information can be learned
+        while True:
+            # Infer additional sentences
+            i = 0  
+            while i < len(self.knowledge):
+                for j in range(len(self.knowledge)):
+                    if self.knowledge[i].cells.issubset(self.knowledge[j].cells):
+                        inference = Sentence(self.knowledge[j].cells.difference(self.knowledge[i].cells), self.knowledge[j].count - self.knowledge[i].count)
+                        if inference not in self.knowledge and inference.cells != set():
+                            # print("\nAdding knowledge:")
+                            # print(inference)
+                            self.knowledge.append(inference)
+                i += 1
+            
+            # Mark new mines and safes
+            new_information = False        
+            
+            for i, knowledge in enumerate(copy.deepcopy(self.knowledge)):
+                if knowledge.known_mines() != None:
+                    new_information = True
+                    for cell in knowledge.known_mines():
+                        self.mark_mine(cell)
+                
+                if knowledge.known_safes() != None:
+                    new_information = True
+                    for cell in knowledge.known_safes():
+                        self.mark_safe(cell)
+            
+            # Remove empty sentences from the knowledge base
+            for sentence in self.knowledge:
+                if sentence.cells == set():
+                    self.knowledge.remove(sentence)
+                    
+            # Check for duplicate sentences in the knowledge base
+            while self.find_duplicate(self.knowledge)[0] != False:
+                self.knowledge.remove(self.find_duplicate(self.knowledge)[1])
+            
+            # If no new mines or safes have been found, make next move
+            if new_information == False:
+                break
 
     def make_safe_move(self):
         """
@@ -196,7 +261,11 @@ class MinesweeperAI():
         This function may use the knowledge in self.mines, self.safes
         and self.moves_made, but should not modify any of those values.
         """
-        raise NotImplementedError
+        if self.safes.difference(self.moves_made) == set():
+            return None
+        else:
+            safe_move = self.safes.difference(self.moves_made).pop()
+            return safe_move
 
     def make_random_move(self):
         """
@@ -205,4 +274,47 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        raise NotImplementedError
+        # Set of all moves
+        all_moves = set()
+        for i in range(self.height):
+            for j in range(self.width):
+                all_moves.add((i,j))
+        
+        # Set of moves all moves not made
+        possible_moves = all_moves.difference(self.moves_made)
+        
+        # Remove known mines
+        candidate_moves = possible_moves.difference(self.mines)
+        
+        if candidate_moves != set():
+            return candidate_moves.pop()
+        else:
+            return None
+        
+    def get_neighbours(self, cell):
+        """
+        Returns the set of all neighbouring cells.
+        """
+        # Create empty list of neighbours
+        neighbours = set()
+        
+        # Add the 3x3 block around cell to neighbours as individual cells
+        for i in range(3):
+            for j in range(3):
+                neighbours.add((cell[0] + (i-1), cell[1] + (j-1)))
+                
+        # Remove cell and any out of bound cells from neighbours
+        for neighbour in neighbours.copy():
+            if neighbour == cell or neighbour[0] < 0 or neighbour[0] >= self.height or neighbour[1] < 0 or neighbour[1] >= self.width:
+                neighbours.remove(neighbour)
+        
+        return neighbours
+        
+        
+    def find_duplicate(self, lst):
+        for i, x in enumerate(lst):
+            for j, y in enumerate(lst):
+                if i != j and x == y:
+                    return True, x
+        return False, Sentence({}, 0)
+                
