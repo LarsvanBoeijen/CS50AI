@@ -7,7 +7,6 @@ import random
 DAMPING = 0.85
 SAMPLES = 10000
 
-
 def main():
     if len(sys.argv) != 2:
         sys.exit("Usage: python pagerank.py corpus")
@@ -46,7 +45,6 @@ def crawl(directory):
         )
 
     return pages
-
 
 def transition_model(corpus, page, damping_factor):
     """
