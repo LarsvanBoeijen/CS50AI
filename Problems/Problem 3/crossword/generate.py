@@ -333,10 +333,10 @@ class CrosswordCreator():
                 # Assign the value
                 assignment[selectedVariable] = value
                 
-                # # Get the arcs involving the selected variable
+                # Get the arcs involving the selected variable
                 selectedArcs = [arc for arc, overlap in self.crossword.overlaps.items() if overlap != None and arc[0] == selectedVariable]
                 
-                # # Ensure arc consistency between selected arcs
+                # Ensure arc consistency between selected arcs
                 self.ac3(arcs=selectedArcs)
             
                 # Backtrack
