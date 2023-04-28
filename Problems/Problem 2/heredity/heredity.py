@@ -207,11 +207,14 @@ def joint_probability(people, one_gene, two_genes, have_trait):
             
             # Using the probabilities of the parents passing a defective gene, calculate the probability of their child having the specified number of genes
             if query_info[person]['gene'] == 0:
-                probGene = (1-probDefect[0]) * (1-probDefect[1]) # P(No defect from mother) * P(No defect from father)
+                # P(No defect from mother) * P(No defect from father)
+                probGene = (1-probDefect[0]) * (1-probDefect[1]) 
             elif query_info[person]['gene'] == 1:
-                probGene = probDefect[0] * (1-probDefect[1]) + (1-probDefect[0]) * probDefect[1]# P(Defect from mother) * P(No defect from father) + P(No defect from mother) * P(Defect from father)
+                # P(Defect from mother) * P(No defect from father) + P(No defect from mother) * P(Defect from father)
+                probGene = probDefect[0] * (1-probDefect[1]) + (1-probDefect[0]) * probDefect[1]
             elif query_info[person]['gene'] == 2:
-                probGene = probDefect[0] * probDefect[1] # P(Defect from mother) * P(Defect from father)
+                # P(Defect from mother) * P(Defect from father)
+                probGene = probDefect[0] * probDefect[1] 
         
         # Look up relevant conditional probability
         probConditional = PROBS['trait'][query_info[person]['gene']][query_info[person]['trait']]
