@@ -25,7 +25,6 @@ def main():
     # Train model and make predictions
     model = train_model(X_train, y_train)
     predictions = model.predict(X_test)
-    
     sensitivity, specificity = evaluate(y_test, predictions)
 
     # Print results
@@ -68,17 +67,16 @@ def load_data(filename):
     labels = []
     
     with open(filename) as f:
-        # Create csv Reader object
+        # Create csv reader object
         reader = csv.reader(f)
         
         # Skip over header line
         next(reader)
         
-        # For every row in the dataset
+        # For every row in the dataset, cast the data points to their respective data type
         for row in reader:
-            # Cast the data points to their respective data type
             for column, dataPoint in enumerate(row):
-                # Administrative, Informational, ProductRelated, Month, OperatingSystems, Browser, Region and TrafficType
+                # Administrative, Informational, ProductRelated, OperatingSystems, Browser, Region and TrafficType
                 # can all directly be cast as an integer
                 if column in [0, 2, 4, 11, 12, 13, 14]:
                     row[column] = int(dataPoint)
@@ -91,9 +89,10 @@ def load_data(filename):
                         row[column] = 1
                     else:
                         row[column] = 0
-                # Turn the Weekend and Revenue strings into a numerical value
+                # Turn Weekend and Revenue strings into a numerical value
                 elif column in [16, 17]:
                     row[column] = BOOLEAN.index(dataPoint)
+                # All other colums are cast as floating points
                 else:
                     row[column] = float(dataPoint)
                     
